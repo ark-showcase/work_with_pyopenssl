@@ -19,6 +19,8 @@ from bs4 import BeautifulSoup
 import base64
 from PIL import Image
 from io import BytesIO
+
+import easyocr
 # Create your views here.
 
 class ExtractText(APIView):
@@ -109,6 +111,22 @@ class ExtractText(APIView):
             print(f"Error converting Base64 to image: {e}")
             return None
 
+    def readtext_from_base64(self, b64_string):
+        # Decode the Base64 string to bytes
+        image_bytes = base64.b64decode(b64_string)
+
+        # Convert the bytes to a NumPy array
+        nparr = np.frombuffer(image_bytes, np.uint8)
+
+        # Decode the image using cv2.imdecode
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # Use easyocr to read text from the image
+        reader = easyocr.Reader(['en'])
+        result = reader.readtext(image, detail=0)
+
+        return result
+
     def post(self, request, *args, **kwargs):
         # Assuming the image is sent as part of the POST request
         image = request.FILES.get('img')  # 'img' should be the name attribute in your HTML form
@@ -132,7 +150,9 @@ class ExtractText(APIView):
             visa_doc_img = self.base64_to_image(visa_doc_b64)
             print(visa_doc_img)
 
-            return JsonResponse({'extracted_links': extracted_links})
+            extratced_texts = self.readtext_from_base64(visa_doc_b64)
+
+            return JsonResponse({'extratced_texts': extratced_texts})
         else:
             return JsonResponse({'error': 'No image file provided'})
 
