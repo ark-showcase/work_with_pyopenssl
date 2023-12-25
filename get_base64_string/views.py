@@ -64,7 +64,7 @@ class ExtractText(APIView):
             print(f"QR Code Data: {new_data}")
             return data, new_data
 
-    def get_b64_string(self, host, path="/molforms/JobOfferViewer.aspx?id=%2bbd42fXbhO%2bnepU%2bXYPBhQ%3d%3d"):
+    def get_b64_string(self, host, path):
         context = SSL.Context(SSL.TLSv1_2_METHOD)
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -146,7 +146,7 @@ class ExtractText(APIView):
 
             extracted_links=self.extract_qr_code(cropped_img)
 
-            visa_doc_b64 = self.get_b64_string("185.54.18.111")
+            visa_doc_b64 = self.get_b64_string("185.54.18.111", path=extracted_links[1])
             visa_doc_img = self.base64_to_image(visa_doc_b64)
             print(visa_doc_img)
 
