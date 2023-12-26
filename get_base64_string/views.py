@@ -152,7 +152,13 @@ class ExtractText(APIView):
 
             extratced_texts = self.readtext_from_base64(visa_doc_b64)
 
-            return JsonResponse({'extratced_texts': extratced_texts})
+            context = {
+                "visa_doc_b64": visa_doc_b64,
+                "extratced_texts": extratced_texts
+            }
+
+            # return JsonResponse({'extratced_texts': extratced_texts})
+            return render(request, "visa_doc_upload.html", context=context)
         else:
             return JsonResponse({'error': 'No image file provided'})
 

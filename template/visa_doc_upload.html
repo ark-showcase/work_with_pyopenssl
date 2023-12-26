@@ -3,6 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        #container {
+            display: flex;
+        }
+
+        #imageFrame {
+            width: 1000px;
+            height: 1500px;
+            border: 0;
+        }
+
+        #textContainer {
+            margin-left: 20px; /* Adjust the margin as needed */
+        }
+    </style>
 </head>
 <body>
     <form method="post" enctype="multipart/form-data">
@@ -10,5 +25,14 @@
         <input type="file" name="img">
         <button type="submit">Submit</button>
     </form>
+    <div id="container">
+        <iframe id="imageFrame" src="data:image/jpeg;base64,{{ visa_doc_b64 }}" frameborder="0"></iframe>
+        <div id="textContainer">
+            {% for text in extratced_texts %}
+                {{ text }}
+                <br>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 </html>
