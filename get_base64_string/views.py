@@ -135,6 +135,11 @@ class ExtractText(APIView):
             # Read the image content from the file
             image_content = image.read()
 
+            # Use easyocr to read text from the image
+            # reader = easyocr.Reader(['en'])
+            # result = reader.readtext(image_content, detail=0)
+            # print(result)
+
             # Specify the output path for the cropped image
             output_image_path = "cropped_image.jpg"
 
