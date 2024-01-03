@@ -21,6 +21,18 @@ from PIL import Image
 from io import BytesIO
 
 import easyocr
+
+import torch
+
+from .helpers.extract_text_from_image import extract_text
+from .helpers.crop_image import crop_image
+from .helpers.crop_image_by_percentage import crop_image_by_percentage
+from .helpers.scan_qr_code import extract_qr_code
+from .helpers.ssl_response import get_response
+from .helpers.html_attr_value import get_element_attr
+from .helpers.base64toimage import easy_ocr_readable_image
+from .helpers.extract_text_from_image import extract_text
+
 # Create your views here.
 
 class ExtractText(APIView):
@@ -168,6 +180,11 @@ class ExtractText(APIView):
             return JsonResponse({'error': 'No image file provided'})
 
     def get(self, request):
+
+        print(torch.cuda.is_available())
+        print(torch.cuda.current_device())
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
+
         context = {}
         # return Response(context, status=status.HTTP_200_OK)
         return render(request, "visa_doc_upload.html", context=context)
@@ -199,3 +216,60 @@ class GetBase64String(APIView):
             print(f"Failed to retrieve the page. Status code: {response.status_code}")
 
         return Response({}, status=status.HTTP_200_OK)
+
+
+class Read_from_b64(APIView):
+    def post(self, request):
+        b64 = request.POST.get('b64')
+
+        doc_image = easy_ocr_readable_image(b64)
+
+        # percentage wise coordinates
+        crop_coordinates_for_doc = (0, 0, 50, 100)
+
+        cropped_doc = crop_image_by_percentage(doc_image, '', *crop_coordinates_for_doc)
+
+        extracted_text = extract_text(cropped_doc)
+
+        index_of_work_style = extracted_text.index("Work Style") + 1
+        index_of_transaction_number = extracted_text.index("Transaction Number") + 1
+        for i in extracted_text:
+            if i.__contains__('Itis on'):
+                index_of_week_day = extracted_text.index(i)
+        index_of_establishment_name = extracted_text.index("1, Establishment Name") + 1
+        index_of_establishment_no = extracted_text.index("Establishment No") + 1
+        index_of_represented_by = extracted_text.index("Represented by") + 1
+        index_of_passport_no = extracted_text.index("Passport No") + 1
+        index_of_nationality = extracted_text.index("Nationality") + 1
+        index_of_title = extracted_text.index("Title") + 1
+        index_of_emirate = extracted_text.index("Emirate") + 1
+        index_of_telephone_number = extracted_text.index("Telephone Number") + 1
+        index_of_email = extracted_text.index("E-Maill") + 1
+        index_of_name = extracted_text.index("2. Name") + 1
+        index_of_nationality2 = extracted_text.index("Nationality") + 1
+        index_of_dob = extracted_text.index("Date of Birth") + 1
+        index_of_passport = extracted_text.index("Passport") + 1
+        index_of_telephone_number2 = extracted_text.index("Telephone Number") + 1
+        index_of_work_style_academic_qualification = extracted_text.index("Academic Qualification") + 1
+
+        context = {
+            "work_style": extracted_text[index_of_work_style],
+            "transaction_number": extracted_text[index_of_transaction_number],
+            "week_day": extracted_text[index_of_week_day][10:17],
+            "establishment_name": extracted_text[index_of_establishment_name],
+            "establishment_no": extracted_text[index_of_establishment_no],
+            "represented_by": extracted_text[index_of_represented_by],
+            "passport_no": extracted_text[index_of_passport_no],
+            "nationality": extracted_text[index_of_nationality],
+            "title": extracted_text[index_of_title],
+            "emirate": extracted_text[index_of_emirate],
+            "telephone_number": extracted_text[index_of_telephone_number],
+            "email": extracted_text[index_of_email],
+            "name": extracted_text[index_of_name],
+            "nationality2": extracted_text[index_of_nationality2],
+            "dob": extracted_text[index_of_dob],
+            "passport": extracted_text[index_of_passport],
+            "telephone_number2": extracted_text[index_of_telephone_number2],
+            "work_style_academic_qualification": extracted_text[index_of_work_style_academic_qualification],
+        }
+        return Response(context, status=status.HTTP_200_OK)
